@@ -10,6 +10,7 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String login;
+    private String password;
     @ManyToMany
     private List<Role> roles;
 
@@ -35,6 +36,14 @@ public class Person {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override

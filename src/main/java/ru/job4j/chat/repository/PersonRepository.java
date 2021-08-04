@@ -4,4 +4,5 @@ import org.springframework.data.repository.CrudRepository;
 import ru.job4j.chat.model.Person;
 
 public interface PersonRepository extends CrudRepository<Person, Integer> {
+    public Person findByLogin(String login);
 }
