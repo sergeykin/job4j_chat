@@ -7,12 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Person;
 import ru.job4j.chat.repository.PersonRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,5 +74,16 @@ public class PersonController {
             put("type", e.getClass());
         }}));
         LOGGER.error(e.getLocalizedMessage());
+    }
+
+    @PatchMapping("/patch")
+    public Person path(@RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
+        var current = personRepository.findById(person.getId());
+        if (!current.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        Patch<Person> patch = new Patch<>();
+        personRepository.save(patch.getPatch(current.get(),person));
+        return current.get();
     }
 }

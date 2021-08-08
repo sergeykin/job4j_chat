@@ -3,9 +3,11 @@ package ru.job4j.chat.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -47,5 +49,16 @@ public class RoomController {
     public ResponseEntity<Void> update(@RequestBody Room room) {
         this.roomRepository.save(room);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/patch")
+    public Room path(@RequestBody Room room) throws InvocationTargetException, IllegalAccessException {
+        var current = roomRepository.findById(room.getId());
+        if (!current.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        Patch<Room> patch = new Patch<>();
+        roomRepository.save(patch.getPatch(current.get(),room));
+        return current.get();
     }
 }

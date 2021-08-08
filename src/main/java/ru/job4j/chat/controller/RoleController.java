@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.repository.RoleRepository;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,5 +90,16 @@ public class RoleController {
                 .contentLength(body.length())
                 .body(body);
         return entity;
+    }
+
+    @PatchMapping("/patch")
+    public Role path(@RequestBody Role role) throws InvocationTargetException, IllegalAccessException {
+        var current = roleRepository.findById(role.getId());
+        if (!current.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        Patch<Role> patch = new Patch<>();
+        roleRepository.save(patch.getPatch(current.get(),role));
+        return current.get();
     }
 }
