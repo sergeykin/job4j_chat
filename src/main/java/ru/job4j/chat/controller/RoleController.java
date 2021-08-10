@@ -4,11 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMapAdapter;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Role;
 import ru.job4j.chat.repository.RoleRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +49,7 @@ public class RoleController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Role> create(@RequestBody Role role) {
+    public ResponseEntity<Role> create(@Valid @RequestBody Role role) {
         this.roleRepository.save(role);
         Object body = new HashMap<>() {{
             put("role_id", role.getId());
@@ -101,5 +104,17 @@ public class RoleController {
         Patch<Role> patch = new Patch<>();
         roleRepository.save(patch.getPatch(current.get(),role));
         return current.get();
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handle(MethodArgumentNotValidException e) {
+        return ResponseEntity.badRequest().body(
+                e.getFieldErrors().stream()
+                        .map(f -> Map.of(
+                                f.getField(),
+                                String.format("%s. Actual value: %s", f.getDefaultMessage(), f.getRejectedValue())
+                        ))
+                        .collect(Collectors.toList())
+        );
     }
 }

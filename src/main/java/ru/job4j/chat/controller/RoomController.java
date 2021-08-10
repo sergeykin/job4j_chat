@@ -2,13 +2,16 @@ package ru.job4j.chat.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.chat.model.Room;
 import ru.job4j.chat.repository.RoomRepository;
 
+import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -38,7 +41,7 @@ public class RoomController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Room> create(@RequestBody Room room) {
+    public ResponseEntity<Room> create(@Valid @RequestBody Room room) {
         return new ResponseEntity<Room>(
                 this.roomRepository.save(room),
                 HttpStatus.CREATED
@@ -46,7 +49,7 @@ public class RoomController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Room room) {
+    public ResponseEntity<Void> update(@Valid @RequestBody Room room) {
         this.roomRepository.save(room);
         return ResponseEntity.ok().build();
     }
@@ -60,5 +63,17 @@ public class RoomController {
         Patch<Room> patch = new Patch<>();
         roomRepository.save(patch.getPatch(current.get(),room));
         return current.get();
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handle(MethodArgumentNotValidException e) {
+        return ResponseEntity.badRequest().body(
+                e.getFieldErrors().stream()
+                        .map(f -> Map.of(
+                                f.getField(),
+                                String.format("%s. Actual value: %s", f.getDefaultMessage(), f.getRejectedValue())
+                        ))
+                        .collect(Collectors.toList())
+        );
     }
 }
